@@ -51,7 +51,13 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/public', publicRoutes);
 
+// Catch-all for undefined API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ success: false, message: `API route not found: ${req.originalUrl}` });
+});
+
 // Global Error Handler
 app.use(errorHandler);
 
 module.exports = app;
+
