@@ -6,7 +6,7 @@ const { generateToken } = require('../config/jwt');
 // @route   POST /api/auth/register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, phone, businessName, hourlyRate, skills, zipCode } = req.body;
+    const { name, email, password, role, phone, businessName, hourlyRate, skills, zipCode, avatar } = req.body;
 
     // Validation 1: Email must be @gmail.com
     const gmailRegex = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
@@ -49,6 +49,7 @@ const registerUser = async (req, res) => {
       password,
       role: userRole,
       phone: phone || '',
+      avatar: avatar || '',
       address: { zipCode: zipCode || '10001' }
     });
 
@@ -78,6 +79,7 @@ const registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      avatar: user.avatar,
       token
     });
   } catch (error) {
