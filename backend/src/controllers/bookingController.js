@@ -29,8 +29,10 @@ const createBooking = async (req, res) => {
     const scheduledDate = quote.proposedDate || quote.serviceRequest?.preferredDate || new Date().toISOString().split('T')[0];
     const timeSlot = quote.proposedTimeSlot || quote.serviceRequest?.preferredTimeSlot || '09:00 - 11:00';
 
+    const providerId = quote.provider?._id || quote.provider;
+
     // Check availability slot using conflict engine
-    const availabilityCheck = await checkProviderAvailability(quote.provider, scheduledDate, timeSlot);
+    const availabilityCheck = await checkProviderAvailability(providerId, scheduledDate, timeSlot);
     if (!availabilityCheck.available) {
       return res.status(400).json({ message: availabilityCheck.message });
     }
