@@ -30,11 +30,21 @@ const getInvoices = async (req, res) => {
 const payInvoice = async (req, res) => {
   try {
     const { paymentMethod } = req.body;
-    const invoice = await Invoice.findById(req.params.id);
+    const invoice = await Invoice.findById(req.params.id).populate('booking');
     if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
     if (invoice.paymentStatus === 'PAID') {
       return res.status(400).json({ message: 'Invoice is already paid' });
+    }
+
+    // Require 4-digit PIN verification on linked booking before payment release
+    if (invoice.booking) {
+      const booking = invoice.booking._id ? invoice.booking : await Booking.findById(invoice.booking);
+      if (booking && !booking.codeVerified && !['WORK_COMPLETE', 'COMPLETED'].includes(booking.status)) {
+        return res.status(400).json({
+          message: 'Payment Locked: The 4-digit Service Verification PIN must be entered and verified upon work completion before payment can be released to the provider.'
+        });
+      }
     }
 
     invoice.paymentStatus = 'PAID';
@@ -50,12 +60,12 @@ const payInvoice = async (req, res) => {
       details: { amount: invoice.totalAmount, invoiceNumber: invoice.invoiceNumber }
     });
 
-    // Notify Provider of payment receipt
+    // Notify Provider of payment receipt & funds release
     await createNotification({
       recipient: invoice.provider,
       sender: req.user._id,
-      title: '💰 Payment Received',
-      message: `$${invoice.totalAmount} was paid by ${req.user.name} for Invoice #${invoice.invoiceNumber}.`,
+      title: '💰 Payout Released to Provider',
+      message: `Payment of $${invoice.totalAmount} for Invoice #${invoice.invoiceNumber} has been verified via PIN and released to your account earnings.`,
       type: 'INVOICE_PAID',
       relatedId: invoice._id,
       link: '/provider-dashboard?tab=jobs'
@@ -65,13 +75,13 @@ const payInvoice = async (req, res) => {
     await createNotification({
       recipient: req.user._id,
       title: 'Invoice Payment Confirmed',
-      message: `Your payment of $${invoice.totalAmount} for Invoice #${invoice.invoiceNumber} was processed successfully.`,
+      message: `Your payment of $${invoice.totalAmount} for Invoice #${invoice.invoiceNumber} was processed successfully following verified PIN completion.`,
       type: 'INVOICE_PAID',
       relatedId: invoice._id,
       link: '/customer-dashboard?tab=invoices'
     });
 
-    res.json({ message: 'Payment successful', invoice });
+    res.json({ message: 'Payment successful and funds released to provider', invoice });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

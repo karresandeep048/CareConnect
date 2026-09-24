@@ -7,7 +7,7 @@ import StatusBadge from '../components/StatusBadge';
 import SOSModal from '../components/SOSModal';
 import { AlertTriangle, Tag as TagIcon } from 'lucide-react';
 import {
-  Plus, Clock, FileText, CheckCircle2, DollarSign, Star, AlertCircle,
+  Plus, Clock, FileText, CheckCircle2, DollarSign, Star, AlertCircle, Lock,
   Sparkles, MapPin, Calendar, ArrowRight, Key, UserCheck, Users,
   ShieldCheck, Tag, Wrench, ChevronDown, Check, User, CalendarDays, RotateCcw, Filter
 } from 'lucide-react';
@@ -595,12 +595,24 @@ export default function CustomerDashboard() {
                 </div>
 
                 {inv.paymentStatus === 'UNPAID' && (
-                  <button
-                    onClick={() => handlePayInvoice(inv._id)}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 flex items-center gap-1.5"
-                  >
-                    <DollarSign className="w-4 h-4" /> Pay Invoice Now
-                  </button>
+                  inv.booking && (!inv.booking.codeVerified && !['WORK_COMPLETE', 'COMPLETED'].includes(inv.booking.status)) ? (
+                    <div className="flex flex-col items-end gap-1">
+                      <button
+                        disabled
+                        className="px-4 py-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs cursor-not-allowed border border-slate-200 flex items-center gap-1.5"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-600" /> Locked (Awaiting PIN Verification)
+                      </button>
+                      <span className="text-[11px] text-amber-700 font-semibold">Provider must verify 4-digit PIN upon job completion first</span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handlePayInvoice(inv._id)}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 flex items-center gap-1.5"
+                    >
+                      <DollarSign className="w-4 h-4" /> Pay Invoice Now
+                    </button>
+                  )
                 )}
               </div>
             ))
