@@ -1,0 +1,21 @@
+# One command demo:  docker compose up --build   ->  http://localhost:3000
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+  backend:
+    build: ./backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/careconnect
+      - JWT_SECRET=docker_demo_secret_change_me
+    depends_on:
+      - mongo
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+volumes:
+  mongo_data:
