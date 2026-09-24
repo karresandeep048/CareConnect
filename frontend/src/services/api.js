@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://careconnect-x9dw.onrender.com/api' : '/api');
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json'
   }
