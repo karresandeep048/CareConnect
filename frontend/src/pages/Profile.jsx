@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import {
-  ArrowLeft, User, Mail, Phone, MapPin, Shield, Calendar,
+  ArrowLeft, User, Mail, Phone, MapPin, Shield, Calendar, Camera,
   Briefcase, Award, Star, Clock, CheckCircle2, ChevronRight,
   DollarSign, Wrench, BadgeCheck, LayoutDashboard, FileText,
   CreditCard, Settings, ShieldCheck
@@ -39,6 +39,8 @@ export default function Profile() {
   const [fullProfile, setFullProfile] = useState(null);
   const [providerData, setProviderData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     if (!user) {
@@ -60,6 +62,31 @@ export default function Profile() {
       console.error('Failed to fetch profile:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Profile photo size must be less than 5MB');
+        return;
+      }
+      setUploadingAvatar(true);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const res = await API.put('/auth/profile', { avatar: reader.result });
+          setFullProfile(prev => ({ ...prev, avatar: reader.result }));
+          const currentUser = JSON.parse(localStorage.getItem('careconnect_user') || '{}');
+          localStorage.setItem('careconnect_user', JSON.stringify({ ...currentUser, avatar: reader.result }));
+        } catch (err) {
+          alert('Failed to update profile photo');
+        } finally {
+          setUploadingAvatar(false);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -95,11 +122,29 @@ export default function Profile() {
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
 
         <div className="relative flex items-center gap-4">
-          <img
-            src={profile.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-            alt={profile.name}
-            className="w-20 h-20 rounded-2xl object-cover border-3 border-white/30 shadow-lg"
-          />
+          <div className="relative group shrink-0">
+            <img
+              src={profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'User')}&background=0D9488&color=fff&size=150`}
+              alt={profile.name}
+              className="w-20 h-20 rounded-2xl object-cover border-3 border-white/30 shadow-lg"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-white text-slate-800 shadow-md hover:scale-110 transition-transform flex items-center justify-center cursor-pointer"
+              title="Upload / Change profile photo"
+            >
+              <Camera className="w-3.5 h-3.5 text-teal-700" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-extrabold text-white tracking-tight truncate">
               {profile.name}

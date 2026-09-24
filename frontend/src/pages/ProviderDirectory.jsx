@@ -119,7 +119,7 @@ export default function ProviderDirectory() {
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3">
                     <img
-                      src={p.user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
+                      src={p.user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.user?.name || p.businessName || 'Pro')}&background=0D9488&color=fff&size=150`}
                       alt={p.businessName || p.user?.name}
                       className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-sm"
                     />

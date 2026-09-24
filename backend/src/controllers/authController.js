@@ -195,9 +195,34 @@ const resetPassword = async (req, res) => {
       success: true,
       message: 'Password reset successfully! You can now log in with your new password.'
     });
+// @desc    Update user profile (avatar, name, phone, address)
+// @route   PUT /api/auth/profile
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const { name, phone, avatar, address } = req.body;
+    if (name) user.name = name.trim();
+    if (phone !== undefined) user.phone = phone;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (address) user.address = { ...user.address, ...address };
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      phone: user.phone,
+      address: user.address,
+      message: 'Profile updated successfully'
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, forgotPassword, resetPassword };
+module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, forgotPassword, resetPassword };
