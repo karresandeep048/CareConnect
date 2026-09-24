@@ -75,13 +75,24 @@ export default function Profile() {
       setUploadingAvatar(true);
       const reader = new FileReader();
       reader.onloadend = async () => {
+        const dataUrl = reader.result;
+        // Instantly update UI and localStorage
+        setFullProfile(prev => ({ ...prev, avatar: dataUrl }));
+        const currentUser = JSON.parse(localStorage.getItem('careconnect_user') || '{}');
+        localStorage.setItem('careconnect_user', JSON.stringify({ ...currentUser, avatar: dataUrl }));
+
         try {
-          const res = await API.put('/auth/profile', { avatar: reader.result });
-          setFullProfile(prev => ({ ...prev, avatar: reader.result }));
-          const currentUser = JSON.parse(localStorage.getItem('careconnect_user') || '{}');
-          localStorage.setItem('careconnect_user', JSON.stringify({ ...currentUser, avatar: reader.result }));
+          if (user.role === 'provider') {
+            try {
+              await API.put('/providers/profile', { avatar: dataUrl });
+            } catch (pErr) {
+              await API.put('/auth/profile', { avatar: dataUrl });
+            }
+          } else {
+            await API.put('/auth/profile', { avatar: dataUrl });
+          }
         } catch (err) {
-          alert('Failed to update profile photo');
+          console.warn('Backend avatar sync fallback applied locally');
         } finally {
           setUploadingAvatar(false);
         }

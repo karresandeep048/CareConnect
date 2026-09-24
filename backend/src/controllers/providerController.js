@@ -85,7 +85,7 @@ const updateProviderProfile = async (req, res) => {
       });
     }
 
-    const { businessName, bio, skills, serviceAreas, hourlyRate, experienceYears, availability, documents } = req.body;
+    const { businessName, bio, skills, serviceAreas, hourlyRate, experienceYears, availability, documents, avatar } = req.body;
     if (businessName) profile.businessName = businessName;
     if (bio !== undefined) profile.bio = bio;
     if (skills) profile.skills = skills;
@@ -94,6 +94,14 @@ const updateProviderProfile = async (req, res) => {
     if (experienceYears !== undefined) profile.experienceYears = experienceYears;
     if (availability) profile.availability = availability;
     if (documents) profile.documents = documents;
+
+    if (avatar !== undefined) {
+      const user = await User.findById(req.user._id);
+      if (user) {
+        user.avatar = avatar;
+        await user.save();
+      }
+    }
 
     await profile.save();
     res.json(profile);
